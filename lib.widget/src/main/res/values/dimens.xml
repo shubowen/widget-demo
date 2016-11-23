@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="toggle_border_width">2dp</dimen>
+    <dimen name="toggle_border_radius">4dp</dimen>
+    <dimen name="toggle_width">20dp</dimen>
+    <dimen name="toggle_text_size">30sp</dimen>
+</resources>

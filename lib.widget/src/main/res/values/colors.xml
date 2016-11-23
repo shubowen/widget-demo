@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="head_background">#FFFFFF</color>
+    <color name="head_title_text_color">#000000</color>
+
+    <color name="toggle_bord_color">#000000</color>
+    <color name="toggle_background_color">#FF0000</color>
+    <color name="toggle_toggle_color">#00FF00</color>
+    <color name="toggle_text_color">#444444</color>
+
+</resources>

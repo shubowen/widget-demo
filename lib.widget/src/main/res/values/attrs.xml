@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <attr name="rightText" format="string"/>
+    <attr name="leftText" format="string"/>
+    <attr name="leftImgRes" format="reference"/>
+    <attr name="rightTextColor" format="color"/>
+    <attr name="rightImgRes" format="reference"/>
+
+
+    <declare-styleable name="HeadBar">
+        <attr name="titleColor" format="color"/>
+        <attr name="headTitle" format="string"/>
+        <attr name="showRightText" format="boolean"/>
+        <attr name="showLeftText" format="boolean"/>
+        <attr name="centerLayout" format="reference"/>
+        <attr name="showLine" format="boolean"/>
+        <attr name="rightImgRes"/>
+        <attr name="rightText"/>
+        <attr name="rightTextColor"/>
+        <attr name="leftImgRes"/>
+        <attr name="android:background"/>
+        <attr name="lineColor" format="color"/>
+    </declare-styleable>
+
+    <declare-styleable name="ActionView">
+        <attr name="leftText"/>
+        <attr name="leftTextMargin" format="dimension"/>
+        <attr name="leftTextSize" format="dimension"/>
+        <attr name="rightTextSize" format="dimension"/>
+        <attr name="leftImgRes"/>
+        <attr name="rightText"/>
+        <attr name="rightTextMargin" format="dimension"/>
+        <attr name="rightImgRes_right" format="reference"/>
+        <attr name="rightImgRes_left" format="reference"/>
+        <attr name="rightDrawablePadding" format="dimension"/>
+        <attr name="rightImgRes"/>
+        <attr name="rightTextColor"/>
+        <attr name="leftTextColor" format="color"/>
+        <!--true=>下划线和左文字对齐-->
+        <attr name="line_bottom_margin" format="boolean"/>
+        <!--true=>显示下划线-->
+        <attr name="show_line_bottom" format="boolean"/>
+        <!--true=>上划线和左文字对齐-->
+        <attr name="line_top_margin" format="boolean"/>
+        <!--true=>显示下划线-->
+        <attr name="show_line_top" format="boolean"/>
+
+        <attr name="model">
+            <enum name="left" value="0"/>
+            <enum name="right" value="1"/>
+            <enum name="all" value="3"/>
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="GridLayout">
+        <attr name="android:columnCount"/>
+        <attr name="horizontalSpace" format="dimension"/>
+        <attr name="verticalSpace" format="dimension"/>
+        <attr name="itemHeight" format="dimension"/>
+    </declare-styleable>
+
+    <declare-styleable name="InputView">
+        <attr name="leftMargin" format="dimension"/>
+        <attr name="android:hint"/>
+        <attr name="android:textColorHint"/>
+        <attr name="android:minEms"/>
+        <attr name="android:drawableLeft"/>
+        <attr name="android:text"/>
+        <attr name="android:inputType"/>
+        <attr name="showLine"/>
+        <attr name="rightText"/>
+        <attr name="android:gravity"/>
+        <attr name="underlineHeight" format="dimension"/>
+        <attr name="underlineColor" format="color"/>
+        <attr name="showUnderline" format="boolean"/>
+        <attr name="rightTextColor"/>
+        <attr name="left_TextColor" format="color"/>
+    </declare-styleable>
+
+    <declare-styleable name="PagerSlidingTabStrip">
+        <attr name="pstsIndicatorColor" format="color"/>
+        <attr name="pstsIndicatorPadding" format="dimension"/>
+        <attr name="pstsIndicatorHeight" format="dimension"/>
+        <attr name="pstsUnderlineColor" format="color"/>
+        <attr name="pstsUnderlineHeight" format="dimension"/>
+        <attr name="pstsDividerColor" format="color"/>
+        <attr name="pstsDividerWidth" format="dimension"/>
+        <attr name="pstsDividerPadding" format="dimension"/>
+        <attr name="pstsScrollOffset" format="dimension"/>
+        <attr name="pstsShouldExpand" format="boolean"/>
+        <attr name="pstsPaddingMiddle" format="boolean"/>
+        <attr name="pstsTabPaddingLeftRight" format="dimension"/>
+        <attr name="pstsTabBackground" format="reference"/>
+        <attr name="pstsTabTextSize" format="dimension"/>
+        <attr name="pstsTabTextColor" format="reference"/>
+        <attr name="pstsTabTextStyle" format="reference">
+            <flag name="normal" value="0x0"/>
+            <flag name="bold" value="0x1"/>
+            <flag name="italic" value="0x2"/>
+        </attr>
+        <attr name="pstsTabTextAllCaps" format="boolean"/>
+        <attr name="pstsTabTextAlpha" format="integer"/>
+        <attr name="pstsTabTextFontFamily" format="string"/>
+    </declare-styleable>
+
+    <declare-styleable name="WaveSideBarView">
+        <attr name="sidebarTextColor" format="color|reference"/>
+        <attr name="sidebarBackgroundColor" format="color|reference"/>
+        <attr name="sidebarChooseTextColor" format="color|reference"/>
+        <attr name="sidebarTextSize" format="float"/>
+    </declare-styleable>
+
+    <declare-styleable name="FlowLayout">
+        <attr name="lineVerticalSpace" format="dimension"/>
+        <attr name="lineMinHorizontalSpace" format="dimension"/>
+        <attr name="lineMaxHorizontalSpace" format="dimension"/>
+        <attr name="format" format="boolean"/>
+    </declare-styleable>
+
+    <declare-styleable name="ToggleButton">
+        <!--边界线颜色-->
+        <attr name="tb_borderColor" format="color"/>
+        <!--边界线宽-->
+        <attr name="tb_borderWidth" format="dimension"/>
+        <!--边界线弧度-->
+        <attr name="tb_borderRadius" format="dimension"/>
+        <!--背景颜色-->
+        <attr name="tb_backgroundColor" format="color"/>
+        <!--左边文字-->
+        <attr name="tb_leftText" format="string"/>
+        <!--右边文字-->
+        <attr name="tb_rightText" format="string"/>
+        <!--文字大小-->
+        <attr name="android:textSize"/>
+        <!--文字颜色-->
+        <attr name="android:textColor"/>
+        <!--开关颜色-->
+        <attr name="tb_toggleColor" format="color"/>
+    </declare-styleable>
+
+    <declare-styleable name="CoordinateLayout_Layout">
+        <attr name="coordinateR" format="integer"/>
+        <attr name="coordinateL" format="integer"/>
+        <attr name="coordinateT" format="integer"/>
+    </declare-styleable>
+
+    <declare-styleable name="TabLayout">
+        <attr name="tabProvider" format="string"/>
+    </declare-styleable>
+
+</resources>
