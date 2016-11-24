@@ -76,6 +76,7 @@
         <attr name="showUnderline" format="boolean"/>
         <attr name="rightTextColor"/>
         <attr name="left_TextColor" format="color"/>
+        <attr name="android:enabled"/>
     </declare-styleable>
 
     <declare-styleable name="PagerSlidingTabStrip">

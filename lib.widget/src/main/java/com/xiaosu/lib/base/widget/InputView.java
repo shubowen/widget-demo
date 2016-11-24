@@ -49,10 +49,10 @@ public class InputView extends LinearLayout {
         MarginLayoutParams params = (MarginLayoutParams) mTvHint.getLayoutParams();
         params.leftMargin = (int) typedArray.getDimension(R.styleable.InputView_leftMargin, 0);
 
+        mEtInput.setEnabled(typedArray.getBoolean(R.styleable.InputView_android_enabled, true));
+
         mEtInput.setGravity(typedArray.getInt(R.styleable.InputView_android_gravity, Gravity.LEFT | Gravity.CLIP_VERTICAL));
-
         mDivider.setVisibility(typedArray.getBoolean(R.styleable.InputView_showLine, true) ? VISIBLE : INVISIBLE);
-
         mTvHint.setText(typedArray.hasValue(R.styleable.InputView_android_text) ?
                 typedArray.getText(R.styleable.InputView_android_text) : "");
 

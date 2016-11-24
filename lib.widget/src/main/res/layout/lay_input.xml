@@ -5,7 +5,6 @@
         android:id="@+id/tv_hint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="身份证号"
         android:textSize="16sp"/>
 
     <View
