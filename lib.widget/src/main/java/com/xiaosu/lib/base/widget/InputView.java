@@ -130,4 +130,9 @@ public class InputView extends LinearLayout {
         return mEtInput.getText().toString().trim();
     }
 
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        mEtInput.setEnabled(enabled);
+    }
 }
