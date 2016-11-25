@@ -225,4 +225,8 @@ public class HeadBar extends RelativeLayout {
         return getResources().getColor(colorRes);
     }
 
+    public void showLeft(boolean show) {
+        tvLeft.setVisibility(show ? VISIBLE : INVISIBLE);
+    }
+
 }
