@@ -165,10 +165,12 @@ public class HeadBar extends RelativeLayout {
     public View setCenterLayout(int layoutRes) {
         tvMiddle.setVisibility(GONE);
         centerLayout = LayoutInflater.from(getContext()).inflate(layoutRes, this, false);
-        LayoutParams params = (LayoutParams) centerLayout.getLayoutParams();
-        params.addRule(RelativeLayout.RIGHT_OF, R.id.tv_left);
-        params.addRule(RelativeLayout.LEFT_OF, R.id.tv_right);
-        params.addRule(RelativeLayout.CENTER_VERTICAL);
+        if (null == centerLayout.getLayoutParams()) {
+            LayoutParams params = new LayoutParams(-2, -2);
+            params.addRule(RelativeLayout.CENTER_VERTICAL);
+            params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+            centerLayout.setLayoutParams(params);
+        }
         addView(centerLayout);
         return centerLayout;
     }
