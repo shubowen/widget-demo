@@ -74,7 +74,7 @@ public class GridLayout extends ViewGroup {
             mItemMaxWidth = (mWidth - getPaddingLeft() - getPaddingRight() - mHorizontalSpace * (mColumnNum - 1)) / mColumnNum;
 
             //如果没有指定item的高,则将高设定为item的宽
-            mItemMaxHeight = mItemMaxHeight == -1 ? mItemMaxWidth : mItemMaxHeight;
+            mItemMaxHeight = mOrgItemHeight == -1 ? mItemMaxWidth : mOrgItemHeight;
 
             int childParentWidthMeasureSpec = MeasureSpec.makeMeasureSpec((int) mItemMaxWidth, MeasureSpec.EXACTLY);
             int childParentHeightMeasureSpec = MeasureSpec.makeMeasureSpec((int) mItemMaxHeight, MeasureSpec.EXACTLY);

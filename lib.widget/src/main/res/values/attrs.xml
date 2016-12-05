@@ -150,4 +150,11 @@
         <attr name="tabProvider" format="string"/>
     </declare-styleable>
 
+    <declare-styleable name="ExpandableTextView">
+        <attr name="maxCollapsedLines" format="integer"/>
+        <attr name="collapsed" format="boolean"/>
+        <attr name="animDuration" format="integer"/>
+        <attr name="animAlphaStart" format="float"/>
+    </declare-styleable>
+
 </resources>
