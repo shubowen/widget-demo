@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.xiaosu.lib.base.widget.ExpandableTextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp"
+    android:background="@color/white"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    app:maxCollapsedLines="2">
+
+    <com.xiaosu.lib.base.widget.ActionView
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/action_height"
+        app:leftText="我的介绍"
+        app:line_bottom_margin="false"
+        app:rightText="编辑"
+        app:rightTextColor="@color/color_style"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:text="安立伟，男，主任医师、硕士生导师，中共党员。毕业于兰 州医学院医疗系，本科，学士学位。甘肃省临床检验中心安立伟，男，主任医师、硕士生导师，中共党员。毕业于兰 州医学院医疗系，本科，学士学位。甘肃省临床检验中心"/>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dp"
+        android:paddingTop="8dp"
+        android:text="查看全部"
+        android:textColor="@color/color_gray_text"/>
+
+</com.xiaosu.lib.base.widget.ExpandableTextView>
