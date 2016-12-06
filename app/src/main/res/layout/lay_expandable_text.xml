@@ -13,7 +13,7 @@
 
     <com.xiaosu.lib.base.widget.ActionView
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="40dp"
         app:leftText="我的介绍"
         app:line_bottom_margin="false"
         app:rightText="编辑"/>
