@@ -118,24 +118,34 @@ public class GridLayout extends ViewGroup {
             if (getChildAt(i).getVisibility() == View.GONE) continue;
             //左上角的y坐标
             //左上角x坐标
-            int right = (int) (left + mItemMaxWidth);
-            int bottom = (int) (top + mItemMaxHeight);
+            int right = Math.round (left + mItemMaxWidth);
+            int bottom = Math.round (top + mItemMaxHeight);
 
             int childMeasuredWidth = child.getMeasuredWidth();
             int childMeasuredHeight = child.getMeasuredHeight();
 
+
             // TODO: 16/7/8 添加Gravity支持,目前只支持center模式
-            int LROffset = (int) ((mItemMaxWidth - childMeasuredWidth) / 2);
-            int TBOffset = (int) ((mItemMaxHeight - childMeasuredHeight) / 2);
+            int LROffset = Math.round((mItemMaxWidth - childMeasuredWidth) / 2);
+            int TBOffset = Math.round((mItemMaxHeight - childMeasuredHeight) / 2);
+
+//            Log.i(TAG, "onLayout-pre: " + (left + LROffset) + ", " + (top + TBOffset));
 
             child.layout(left + LROffset, top + TBOffset, right - LROffset, bottom - TBOffset);
 
+//            Log.i(TAG, "onLayout-post: " + i + ", " + child.getClass().getSimpleName()
+//                    + "---" + childMeasuredWidth + ", " + childMeasuredHeight
+//                    + "---" + child.getLeft() + ", " + child.getTop());
+
             if (((consumedCount + 1) % mColumnNum) == 0) {
+//                Log.i(TAG, "onLayout: 换行");
                 //换行
-                top += (bottom + mVerticalSpace);
-                left = l + getPaddingLeft();
+                top = Math.round (bottom + mVerticalSpace);
+                left = getPaddingLeft();
+
+//                Log.i(TAG, "onLayout-next: " + left + ", " + top);
             } else {
-                left = (int) (right + mHorizontalSpace);
+                left = Math.round (right + mHorizontalSpace);
             }
 
             consumedCount++;
