@@ -24,7 +24,12 @@ public class ActionView extends RelativeLayout {
     View lineTop;
 
     public ActionView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
+    }
+
+    public ActionView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+
         LayoutInflater.from(context).inflate(R.layout.lay_action, this);
 
         tvLeft = (TextView) findViewById(R.id.tv_left);
@@ -35,11 +40,15 @@ public class ActionView extends RelativeLayout {
         float density = getResources().getDisplayMetrics().density;
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.ActionView);
+
         tvLeft.setText(a.getString(R.styleable.ActionView_leftText));
         tvLeft.setTextSize(TypedValue.COMPLEX_UNIT_PX, a.getDimensionPixelSize(R.styleable.ActionView_leftTextSize, (int) (16 * density)));
         tvLeft.setTextColor(a.getColor(R.styleable.ActionView_leftTextColor, 0XFF333333));
         tvRight.setTextSize(TypedValue.COMPLEX_UNIT_PX, a.getDimensionPixelSize(R.styleable.ActionView_rightTextSize, (int) (16 * density)));
         tvRight.setHint(a.getString(R.styleable.ActionView_rightText));
+
+        if (a.hasValue(R.styleable.ActionView_rightTextHintColor))
+            tvRight.setHintTextColor(a.getColor(R.styleable.ActionView_rightTextHintColor, 0xFF999999));
         //左边TextView的边距
         MarginLayoutParams layoutParams = (MarginLayoutParams) tvLeft.getLayoutParams();
         layoutParams.leftMargin = (int) a.getDimension(R.styleable.ActionView_leftTextMargin, density * 12);

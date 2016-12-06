@@ -36,6 +36,7 @@
         <attr name="rightDrawablePadding" format="dimension"/>
         <attr name="rightImgRes"/>
         <attr name="rightTextColor"/>
+        <attr name="rightTextHintColor" format="color"/>
         <attr name="leftTextColor" format="color"/>
         <!--true=>下划线和左文字对齐-->
         <attr name="line_bottom_margin" format="boolean"/>
