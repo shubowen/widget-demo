@@ -28,11 +28,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.util.SparseBooleanArray;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
@@ -45,42 +42,26 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
 
     private static final String TAG = ExpandableTextView.class.getSimpleName();
 
-    /* The default number of lines */
     private static final int MAX_COLLAPSED_LINES = 8;
 
-    /* The default animation duration */
     private static final int DEFAULT_ANIM_DURATION = 300;
-
-    /* The default alpha value when the animation starts */
-    private static final float DEFAULT_ANIM_ALPHA_START = 0.7f;
 
     protected TextView mTextView;
 
-    protected CompoundButton mButton; // Button to expand/collapse
+    protected CompoundButton mButton; // 展开和收起的按钮
 
-    private boolean mRelayout;
+    private boolean reLayout = true;//是否需要重新测量&布局
 
-    private boolean mCollapsed = true; // Show short version as default.
-
-    private int mCollapsedHeight;
-
+    private boolean mCollapsed = true; // 默认折叠
 
     private int mMaxCollapsedLines;
 
-    private int mMarginBetweenTxtAndBottom;
-
     private int mAnimationDuration;
 
-    private float mAnimAlphaStart;
-
-    private boolean mAnimating;
+    private boolean mAnimating;//动画正在执行
 
     /* Listener for callback */
     private OnExpandStateChangeListener mListener;
-
-    /* For saving collapsed status when used in ListView */
-    private SparseBooleanArray mCollapsedStatus;
-    private int mPosition;
 
     private int mTextFullHeight = -1;
     private int mTextSmallHeight = -1;
@@ -106,6 +87,8 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
             return;
         }
 
+        clearAnimation();
+
         Animation animation;
         if (mCollapsed) {
             animation = new ExpandCollapseAnimation(mTextView, mTextSmallHeight, mTextFullHeight);
@@ -117,28 +100,34 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
         animation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
-                mAnimating = true;
-                mTextView.setMaxLines(Integer.MAX_VALUE);
-//                applyAlphaAnimation(mTextView, mAnimAlphaStart);
+                post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mAnimating = true;
+                        mTextView.setMaxLines(Integer.MAX_VALUE);
+                    }
+                });
             }
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                mCollapsed = !mCollapsed;
-                mButton.setChecked(mCollapsed);
+                post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mCollapsed = !mCollapsed;
+                        mButton.setChecked(mCollapsed);
 
-                if (mCollapsedStatus != null) {
-                    mCollapsedStatus.put(mPosition, mCollapsed);
-                }
-                // clear animation here to avoid repeated applyTransformation() calls
-                clearAnimation();
-                // clear the animation flag
-                mAnimating = false;
+                        // clear animation here to avoid repeated applyTransformation() calls
+                        clearAnimation();
+                        // clear the animation flag
+                        mAnimating = false;
 
-                // notify the listener
-                if (mListener != null) {
-                    mListener.onExpandStateChanged(mTextView, !mCollapsed);
-                }
+                        // notify the listener
+                        if (mListener != null) {
+                            mListener.onExpandStateChanged(mTextView, !mCollapsed);
+                        }
+                    }
+                });
             }
 
             @Override
@@ -146,7 +135,6 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
             }
         });
 
-        clearAnimation();
         startAnimation(animation);
     }
 
@@ -165,61 +153,43 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
-        if (mAnimating) {
+        if (mAnimating || !reLayout) {
             //动画执行期间，只进行一次测量
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             return;
         }
 
-        // Setup with optimistic case
-        showExtra(false);
+        mButton.setVisibility(GONE);
         mTextView.setMaxLines(Integer.MAX_VALUE);
         // Measure
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        // If the text fits in collapsed mode, we are done.
+        // 如果显示行数不大于mMaxCollapsedLines，则不需要折叠
         if (mTextView.getLineCount() <= mMaxCollapsedLines) {
-            // TODO: 2016/12/5 显示按钮 再次测量
             return;
         }
 
-        // TextView的最大高度
+        //走到这里说明文字可能需要折叠，显示mButton
+        mButton.setVisibility(VISIBLE);
+
+        // 获取TextView完全展开高度
         if (mTextFullHeight == -1)
             mTextFullHeight = mTextView.getMeasuredHeight();
 
-        // Doesn't fit in collapsed mode. Collapse text view as needed. Show
-        // button.
-        if (mCollapsed) {
+        // 重新测量获取TextView折叠的高度
+        if (mTextSmallHeight == -1) {
             mTextView.setMaxLines(mMaxCollapsedLines);
-        }
-
-        showExtra(true);
-
-        // 重新测量
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-        if (mCollapsed && mTextSmallHeight == -1) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             mTextSmallHeight = mTextView.getMeasuredHeight();
-            // Gets the margin between the TextView's bottom and the ViewGroup's bottom
-//            mTextView.post(new Runnable() {
-//                @Override
-//                public void run() {
-//                    mMarginBetweenTxtAndBottom = getHeight() - mTextView.getHeight();
-//                }
-//            });
-//            // Saves the collapsed height of this ViewGroup
-//            mCollapsedHeight = getMeasuredHeight();
         }
-        Log.i(TAG, "height: " + mTextFullHeight + ", " + mTextSmallHeight);
-    }
 
-    private void showExtra(boolean flag) {
-        int count = getChildCount();
-        for (int i = 0; i < count; i++) {
-            View child = getChildAt(i);
-            if (child != mTextView)
-                child.setVisibility(flag ? VISIBLE : GONE);
+        //默认选择展开状态
+        if (!mCollapsed) {
+            mTextView.setMaxLines(Integer.MAX_VALUE);
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         }
+
+        reLayout = false;//标记测量完毕
     }
 
     public void setOnExpandStateChangeListener(@Nullable OnExpandStateChangeListener listener) {
@@ -227,21 +197,9 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
     }
 
     public void setText(@Nullable CharSequence text) {
-        mRelayout = true;
+        reLayout = true;
         mTextView.setText(text);
         setVisibility(TextUtils.isEmpty(text) ? View.GONE : View.VISIBLE);
-    }
-
-    public void setText(@Nullable CharSequence text, @NonNull SparseBooleanArray collapsedStatus, int position) {
-        mCollapsedStatus = collapsedStatus;
-        mPosition = position;
-        boolean isCollapsed = collapsedStatus.get(position, true);
-        clearAnimation();
-        mCollapsed = isCollapsed;
-        mButton.setChecked(mCollapsed);
-        setText(text);
-        getLayoutParams().height = ViewGroup.LayoutParams.WRAP_CONTENT;
-        requestLayout();
     }
 
     @Nullable
@@ -256,7 +214,6 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ExpandableTextView);
         mMaxCollapsedLines = typedArray.getInt(R.styleable.ExpandableTextView_maxCollapsedLines, MAX_COLLAPSED_LINES);
         mAnimationDuration = typedArray.getInt(R.styleable.ExpandableTextView_animDuration, DEFAULT_ANIM_DURATION);
-        mAnimAlphaStart = typedArray.getFloat(R.styleable.ExpandableTextView_animAlphaStart, DEFAULT_ANIM_ALPHA_START);
         mCollapsed = typedArray.getBoolean(R.styleable.ExpandableTextView_collapsed, true);
 
         typedArray.recycle();
