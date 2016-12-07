@@ -107,8 +107,8 @@ public class GridLayout extends ViewGroup {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         if (!changed) return;
 
-        int left = getPaddingLeft();
-        int top = getPaddingTop();
+        float left = getPaddingLeft();
+        float top = getPaddingTop();
 
         int consumedCount = 0;
         int childCount = getChildCount();
@@ -118,20 +118,23 @@ public class GridLayout extends ViewGroup {
             if (getChildAt(i).getVisibility() == View.GONE) continue;
             //左上角的y坐标
             //左上角x坐标
-            int right = Math.round (left + mItemMaxWidth);
-            int bottom = Math.round (top + mItemMaxHeight);
+            float right = left + mItemMaxWidth;
+            float bottom = top + mItemMaxHeight;
 
             int childMeasuredWidth = child.getMeasuredWidth();
             int childMeasuredHeight = child.getMeasuredHeight();
 
 
             // TODO: 16/7/8 添加Gravity支持,目前只支持center模式
-            int LROffset = Math.round((mItemMaxWidth - childMeasuredWidth) / 2);
-            int TBOffset = Math.round((mItemMaxHeight - childMeasuredHeight) / 2);
+            float LROffset = (mItemMaxWidth - childMeasuredWidth) * 0.5f;
+            float TBOffset = (mItemMaxHeight - childMeasuredHeight) * 0.5f;
 
 //            Log.i(TAG, "onLayout-pre: " + (left + LROffset) + ", " + (top + TBOffset));
 
-            child.layout(left + LROffset, top + TBOffset, right - LROffset, bottom - TBOffset);
+            child.layout(Math.round(left + LROffset),
+                    Math.round(top + TBOffset),
+                    Math.round(right - LROffset),
+                    Math.round(bottom - TBOffset));
 
 //            Log.i(TAG, "onLayout-post: " + i + ", " + child.getClass().getSimpleName()
 //                    + "---" + childMeasuredWidth + ", " + childMeasuredHeight
@@ -140,12 +143,12 @@ public class GridLayout extends ViewGroup {
             if (((consumedCount + 1) % mColumnNum) == 0) {
 //                Log.i(TAG, "onLayout: 换行");
                 //换行
-                top = Math.round (bottom + mVerticalSpace);
+                top = bottom + mVerticalSpace;
                 left = getPaddingLeft();
 
 //                Log.i(TAG, "onLayout-next: " + left + ", " + top);
             } else {
-                left = Math.round (right + mHorizontalSpace);
+                left = right + mHorizontalSpace;
             }
 
             consumedCount++;
