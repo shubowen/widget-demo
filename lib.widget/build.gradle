@@ -21,7 +21,7 @@ android {
 }
 
 dependencies {
-    provided "com.android.support:support-v4:$rootProject.ext.supportLibVersion"
+    compile "com.android.support:support-v4:$rootProject.ext.supportLibVersion"
     provided "com.android.support:appcompat-v7:$rootProject.ext.supportLibVersion"
 }
 
