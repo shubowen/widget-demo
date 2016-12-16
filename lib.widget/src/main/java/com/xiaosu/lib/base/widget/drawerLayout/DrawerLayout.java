@@ -15,7 +15,7 @@
  */
 
 
-package com.xiaosu.lib.base.widget;
+package com.xiaosu.lib.base.widget.drawerLayout;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -44,7 +44,6 @@ import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
 import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat;
 import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -57,8 +56,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.R.attr.offset;
 
 /**
  * DrawerLayout acts as a top-level container for window content that allows for
@@ -94,7 +91,8 @@ import static android.R.attr.offset;
  * Drawer</a>.</p>
  */
 public class DrawerLayout extends ViewGroup implements DrawerLayoutImpl {
-    private static final String TAG = "DrawerLayout";
+
+    private static final String TAG = "ViewDragHelper";
 
     @IntDef({STATE_IDLE, STATE_DRAGGING, STATE_SETTLING})
     @Retention(RetentionPolicy.SOURCE)
@@ -310,41 +308,6 @@ public class DrawerLayout extends ViewGroup implements DrawerLayoutImpl {
 
         @Override
         public void onDrawerStateChanged(int newState) {
-        }
-    }
-
-    interface DrawerLayoutCompatImpl {
-        void configureApplyInsets(View drawerLayout);
-
-        void dispatchChildInsets(View child, Object insets, int drawerGravity);
-
-        void applyMarginInsets(MarginLayoutParams lp, Object insets, int drawerGravity);
-
-        int getTopInset(Object lastInsets);
-
-        Drawable getDefaultStatusBarBackground(Context context);
-    }
-
-    static class DrawerLayoutCompatImplBase implements DrawerLayoutCompatImpl {
-        public void configureApplyInsets(View drawerLayout) {
-            // This space for rent
-        }
-
-        public void dispatchChildInsets(View child, Object insets, int drawerGravity) {
-            // This space for rent
-        }
-
-        public void applyMarginInsets(MarginLayoutParams lp, Object insets, int drawerGravity) {
-            // This space for rent
-        }
-
-        public int getTopInset(Object insets) {
-            return 0;
-        }
-
-        @Override
-        public Drawable getDefaultStatusBarBackground(Context context) {
-            return null;
         }
     }
 
@@ -1856,7 +1819,7 @@ public class DrawerLayout extends ViewGroup implements DrawerLayoutImpl {
             final LayoutParams lp = (LayoutParams) capturedChild.getLayoutParams();
             lp.isPeeking = false;
 
-            closeOtherDrawer();
+//            closeOtherDrawer();
         }
 
         private void closeOtherDrawer() {
@@ -1870,20 +1833,21 @@ public class DrawerLayout extends ViewGroup implements DrawerLayoutImpl {
         public void onViewReleased(View releasedChild, float xvel, float yvel) {
             // Offset is how open the drawer is, therefore left/right values
             // are reversed from one another.
-            if (null == releasedChild) return;
 
             final float offset = getDrawerViewOffset(releasedChild);
-            final int childWidth = releasedChild.getWidth();
+//            final int childWidth = releasedChild.getWidth();
+//
+//            int left;
+//            if (checkDrawerViewAbsoluteGravity(releasedChild, Gravity.LEFT)) {
+//                left = xvel > 0 || xvel == 0 && offset > 0.5f ? 0 : -childWidth;
+//            } else {
+//                final int width = getWidth();
+//                left = xvel < 0 || xvel == 0 && offset > 0.5f ? width - childWidth : width;
+//            }
 
-            int left;
-            if (checkDrawerViewAbsoluteGravity(releasedChild, Gravity.LEFT)) {
-                left = xvel > 0 || xvel == 0 && offset > 0.5f ? 0 : -childWidth;
-            } else {
-                final int width = getWidth();
-                left = xvel < 0 || xvel == 0 && offset > 0.5f ? width - childWidth : width;
-            }
+            int top = yvel > 0 || yvel == 0 && offset > 0.5f ? getHeight() - releasedChild.getHeight() : getHeight();
 
-            mDragger.settleCapturedViewAt(left, releasedChild.getTop());
+            mDragger.settleCapturedViewAt(releasedChild.getLeft(), top);
             invalidate();
         }
 

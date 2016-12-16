@@ -65,6 +65,8 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
 
     private int mTextFullHeight = -1;
     private int mTextSmallHeight = -1;
+    private String mCollapsedText;
+    private String mExpandedText;
 
     public ExpandableTextView(Context context) {
         this(context, null);
@@ -116,7 +118,9 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
                     public void run() {
                         mCollapsed = !mCollapsed;
                         mButton.setChecked(mCollapsed);
-
+                        if (mCollapsed)
+                            mTextView.setMaxLines(mMaxCollapsedLines);
+                        refreshButtonText();
                         // clear animation here to avoid repeated applyTransformation() calls
                         clearAnimation();
                         // clear the animation flag
@@ -148,6 +152,16 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
     @Override
     protected void onFinishInflate() {
         findViews();
+
+        refreshButtonText();
+    }
+
+    private void refreshButtonText() {
+        if (!TextUtils.isEmpty(mCollapsedText) && mCollapsed) {
+            mButton.setText(mCollapsedText);
+        } else if (!TextUtils.isEmpty(mExpandedText) && !mCollapsed) {
+            mButton.setText(mExpandedText);
+        }
     }
 
     @Override
@@ -173,11 +187,11 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
         mButton.setVisibility(VISIBLE);
 
         // 获取TextView完全展开高度
-        if (mTextFullHeight == -1)
+        if (mTextFullHeight == -1 || reLayout)
             mTextFullHeight = mTextView.getMeasuredHeight();
 
         // 重新测量获取TextView折叠的高度
-        if (mTextSmallHeight == -1) {
+        if (mTextSmallHeight == -1 || reLayout) {
             mTextView.setMaxLines(mMaxCollapsedLines);
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             mTextSmallHeight = mTextView.getMeasuredHeight();
@@ -199,7 +213,7 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
     public void setText(@Nullable CharSequence text) {
         reLayout = true;
         mTextView.setText(text);
-        setVisibility(TextUtils.isEmpty(text) ? View.GONE : View.VISIBLE);
+        requestLayout();
     }
 
     @Nullable
@@ -211,12 +225,24 @@ public class ExpandableTextView extends LinearLayout implements View.OnClickList
     }
 
     private void init(AttributeSet attrs) {
-        TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ExpandableTextView);
-        mMaxCollapsedLines = typedArray.getInt(R.styleable.ExpandableTextView_maxCollapsedLines, MAX_COLLAPSED_LINES);
-        mAnimationDuration = typedArray.getInt(R.styleable.ExpandableTextView_animDuration, DEFAULT_ANIM_DURATION);
-        mCollapsed = typedArray.getBoolean(R.styleable.ExpandableTextView_collapsed, true);
+        TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.ExpandableTextView);
+        mMaxCollapsedLines = a.getInt(R.styleable.ExpandableTextView_maxCollapsedLines, MAX_COLLAPSED_LINES);
+        mAnimationDuration = a.getInt(R.styleable.ExpandableTextView_animDuration, DEFAULT_ANIM_DURATION);
+        mCollapsed = a.getBoolean(R.styleable.ExpandableTextView_collapsed, true);
 
-        typedArray.recycle();
+        if (a.hasValue(R.styleable.ExpandableTextView_indicatorText)) {
+            String indicatorText = a.getString(R.styleable.ExpandableTextView_indicatorText);
+            if (null != indicatorText && indicatorText.contains("&")) {
+                String[] split = indicatorText.split("&");
+                try {
+                    mCollapsedText = split[0];
+                    mExpandedText = split[1];
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        a.recycle();
 
         // enforces vertical orientation
         setOrientation(LinearLayout.VERTICAL);

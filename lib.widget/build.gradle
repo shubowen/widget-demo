@@ -21,8 +21,9 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:support-v4:$rootProject.ext.supportLibVersion"
+    provided "com.android.support:support-v4:$rootProject.ext.supportLibVersion"
     provided "com.android.support:appcompat-v7:$rootProject.ext.supportLibVersion"
+    provided 'io.reactivex:rxandroid:1.2.1'
 }
 
 ext {

@@ -15,7 +15,7 @@
         android:onClick="clickAnchor"
         android:text="底部"/>
 
-    <com.xiaosu.lib.base.widget.DrawerLayout
+    <com.xiaosu.lib.base.widget.drawerLayout.DrawerLayout
         android:id="@+id/drawerLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -29,12 +29,12 @@
 
         <TextView
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="match_parent"
             android:layout_gravity="bottom"
             android:background="@android:color/holo_blue_bright"
             android:gravity="center"
             android:text="这是抽屉"/>
 
-    </com.xiaosu.lib.base.widget.DrawerLayout>
+    </com.xiaosu.lib.base.widget.drawerLayout.DrawerLayout>
 
 </RelativeLayout>

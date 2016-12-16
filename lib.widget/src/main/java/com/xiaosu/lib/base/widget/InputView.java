@@ -10,6 +10,7 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -44,48 +45,52 @@ public class InputView extends LinearLayout {
 
         float density = getResources().getDisplayMetrics().density;
 
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.InputView);
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.InputView);
 
         MarginLayoutParams params = (MarginLayoutParams) mTvHint.getLayoutParams();
-        params.leftMargin = (int) typedArray.getDimension(R.styleable.InputView_leftMargin, 0);
+        params.leftMargin = (int) a.getDimension(R.styleable.InputView_leftMargin, 0);
 
-        mEtInput.setEnabled(typedArray.getBoolean(R.styleable.InputView_android_enabled, true));
+        mEtInput.setEnabled(a.getBoolean(R.styleable.InputView_android_enabled, true));
 
-        mEtInput.setGravity(typedArray.getInt(R.styleable.InputView_android_gravity, Gravity.LEFT | Gravity.CLIP_VERTICAL));
-        mDivider.setVisibility(typedArray.getBoolean(R.styleable.InputView_showLine, true) ? VISIBLE : INVISIBLE);
-        mTvHint.setText(typedArray.hasValue(R.styleable.InputView_android_text) ?
-                typedArray.getText(R.styleable.InputView_android_text) : "");
+        mEtInput.setGravity(a.getInt(R.styleable.InputView_android_gravity, Gravity.LEFT | Gravity.CLIP_VERTICAL));
+        mDivider.setVisibility(a.getBoolean(R.styleable.InputView_showLine, true) ? VISIBLE : INVISIBLE);
+        mTvHint.setText(a.hasValue(R.styleable.InputView_android_text) ?
+                a.getText(R.styleable.InputView_android_text) : "");
 
-        if (typedArray.hasValue(R.styleable.InputView_rightText))
-            mEtInput.setText(typedArray.getString(R.styleable.InputView_rightText));
+        if (a.hasValue(R.styleable.InputView_rightText))
+            mEtInput.setText(a.getString(R.styleable.InputView_rightText));
 
-        mTvHint.setTextColor(typedArray.getColor(R.styleable.InputView_left_TextColor, 0XFF333333));
-        mEtInput.setTextColor(typedArray.getColor(R.styleable.InputView_rightTextColor, 0XFF333333));
-        mEtInput.setHintTextColor(typedArray.getColor(R.styleable.InputView_android_textColorHint, 0xFF999999));
+        mTvHint.setTextColor(a.getColor(R.styleable.InputView_left_TextColor, 0XFF333333));
+        mEtInput.setTextColor(a.getColor(R.styleable.InputView_rightTextColor, 0XFF333333));
+        mEtInput.setHintTextColor(a.getColor(R.styleable.InputView_android_textColorHint, 0xFF999999));
 
-        if (typedArray.hasValue(R.styleable.InputView_android_minEms)) {
-            mTvHint.setMinEms(typedArray.getInt(R.styleable.InputView_android_minEms, 2));
+        if (a.hasValue(R.styleable.InputView_android_minEms)) {
+            mTvHint.setMinEms(a.getInt(R.styleable.InputView_android_minEms, 2));
         }
 
         try {
-            if (typedArray.hasValue(R.styleable.InputView_android_drawableLeft)) {
-                mTvHint.setCompoundDrawablesWithIntrinsicBounds(typedArray.getResourceId(R.styleable.InputView_android_drawableLeft, -1), 0, 0, 0);
+            if (a.hasValue(R.styleable.InputView_android_drawableLeft)) {
+                mTvHint.setCompoundDrawablesWithIntrinsicBounds(a.getResourceId(R.styleable.InputView_android_drawableLeft, -1), 0, 0, 0);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        mEtInput.setHint(typedArray.hasValue(R.styleable.InputView_android_hint) ?
-                typedArray.getText(R.styleable.InputView_android_hint) : "");
+        mEtInput.setHint(a.hasValue(R.styleable.InputView_android_hint) ?
+                a.getText(R.styleable.InputView_android_hint) : "");
 
-        mUnderlineHeight = typedArray.getDimension(R.styleable.InputView_underlineHeight, (float) (density * 0.5));
-        mUnderlineColor = typedArray.getColor(R.styleable.InputView_underlineColor, 0xFFD8D8D8);
+        mUnderlineHeight = a.getDimension(R.styleable.InputView_underlineHeight, (float) (density * 0.5));
+        mUnderlineColor = a.getColor(R.styleable.InputView_underlineColor, 0xFFD8D8D8);
 
-        mEtInput.setInputType(typedArray.getInt(R.styleable.InputView_android_inputType, InputType.TYPE_CLASS_TEXT));
+        mEtInput.setInputType(a.getInt(R.styleable.InputView_android_inputType, InputType.TYPE_CLASS_TEXT));
 
-        mShowUnderline = typedArray.getBoolean(R.styleable.InputView_showUnderline, true);
+        mShowUnderline = a.getBoolean(R.styleable.InputView_showUnderline, true);
 
-        typedArray.recycle();
+        if (a.hasValue(R.styleable.InputView_android_imeOptions)) {
+            mEtInput.setImeOptions(a.getInt(R.styleable.InputView_android_imeOptions, EditorInfo.IME_ACTION_DONE));
+        }
+
+        a.recycle();
 
         mUnderlinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mUnderlinePaint.setColor(mUnderlineColor);
@@ -135,4 +140,9 @@ public class InputView extends LinearLayout {
         super.setEnabled(enabled);
         mEtInput.setEnabled(enabled);
     }
+
+    public void setOnEditorActionListener(TextView.OnEditorActionListener l) {
+        mEtInput.setOnEditorActionListener(l);
+    }
+
 }

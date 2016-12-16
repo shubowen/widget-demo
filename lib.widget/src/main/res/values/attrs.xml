@@ -78,6 +78,7 @@
         <attr name="rightTextColor"/>
         <attr name="left_TextColor" format="color"/>
         <attr name="android:enabled"/>
+        <attr name="android:imeOptions"/>
     </declare-styleable>
 
     <declare-styleable name="PagerSlidingTabStrip">
@@ -154,6 +155,7 @@
     <declare-styleable name="ExpandableTextView">
         <attr name="maxCollapsedLines" format="integer"/>
         <attr name="collapsed" format="boolean"/>
+        <attr name="indicatorText" format="string"/>
         <attr name="animDuration" format="integer"/>
         <attr name="animAlphaStart" format="float"/>
     </declare-styleable>

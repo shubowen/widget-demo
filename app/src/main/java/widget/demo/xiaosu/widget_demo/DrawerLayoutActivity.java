@@ -6,7 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.View;
 
-import com.xiaosu.lib.base.widget.DrawerLayout;
+import com.xiaosu.lib.base.widget.drawerLayout.DrawerLayout;
 
 
 public class DrawerLayoutActivity extends AppCompatActivity {

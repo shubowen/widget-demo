@@ -15,7 +15,7 @@
  */
 
 
-package com.xiaosu.lib.base.widget;
+package com.xiaosu.lib.base.widget.drawerLayout;
 
 /**
  * Interface used to communicate from the v21-specific code for configuring a DrawerLayout
