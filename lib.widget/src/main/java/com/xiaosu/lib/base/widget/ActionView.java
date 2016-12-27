@@ -206,9 +206,12 @@ public class ActionView extends RelativeLayout {
         tvRight.setText(sequence);
     }
 
+    public void setRightHintText(CharSequence sequence) {
+        tvRight.setHint(sequence);
+    }
+
     public void setTvLeft(CharSequence sequence) {
         tvLeft.setText(sequence);
-
     }
 
     public void setTvLeftSize(int size) {

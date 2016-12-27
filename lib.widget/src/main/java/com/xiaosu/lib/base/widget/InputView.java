@@ -50,9 +50,12 @@ public class InputView extends LinearLayout {
         MarginLayoutParams params = (MarginLayoutParams) mTvHint.getLayoutParams();
         params.leftMargin = (int) a.getDimension(R.styleable.InputView_leftMargin, 0);
 
+        MarginLayoutParams params2 = (MarginLayoutParams) mEtInput.getLayoutParams();
+        params2.rightMargin = (int) a.getDimension(R.styleable.InputView_rightMargin, 0);
+
         mEtInput.setEnabled(a.getBoolean(R.styleable.InputView_android_enabled, true));
 
-        mEtInput.setGravity(a.getInt(R.styleable.InputView_android_gravity, Gravity.LEFT | Gravity.CLIP_VERTICAL));
+        mEtInput.setGravity(a.getInt(R.styleable.InputView_android_gravity, Gravity.LEFT | Gravity.CENTER_VERTICAL));
         mDivider.setVisibility(a.getBoolean(R.styleable.InputView_showLine, true) ? VISIBLE : INVISIBLE);
         mTvHint.setText(a.hasValue(R.styleable.InputView_android_text) ?
                 a.getText(R.styleable.InputView_android_text) : "");

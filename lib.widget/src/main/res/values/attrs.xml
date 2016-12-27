@@ -63,6 +63,7 @@
 
     <declare-styleable name="InputView">
         <attr name="leftMargin" format="dimension"/>
+        <attr name="rightMargin" format="dimension"/>
         <attr name="android:hint"/>
         <attr name="android:textColorHint"/>
         <attr name="android:minEms"/>
