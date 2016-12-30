@@ -55,15 +55,15 @@ public class InputView extends LinearLayout {
 
         mEtInput.setEnabled(a.getBoolean(R.styleable.InputView_android_enabled, true));
 
-        mEtInput.setGravity(a.getInt(R.styleable.InputView_android_gravity, Gravity.LEFT | Gravity.CENTER_VERTICAL));
         mDivider.setVisibility(a.getBoolean(R.styleable.InputView_showLine, true) ? VISIBLE : INVISIBLE);
         mTvHint.setText(a.hasValue(R.styleable.InputView_android_text) ?
                 a.getText(R.styleable.InputView_android_text) : "");
 
+        mTvHint.setTextColor(a.getColor(R.styleable.InputView_left_TextColor, 0XFF333333));
+
         if (a.hasValue(R.styleable.InputView_rightText))
             mEtInput.setText(a.getString(R.styleable.InputView_rightText));
-
-        mTvHint.setTextColor(a.getColor(R.styleable.InputView_left_TextColor, 0XFF333333));
+        mEtInput.setGravity(a.getInt(R.styleable.InputView_android_gravity, Gravity.START | Gravity.CENTER_VERTICAL));
         mEtInput.setTextColor(a.getColor(R.styleable.InputView_rightTextColor, 0XFF333333));
         mEtInput.setHintTextColor(a.getColor(R.styleable.InputView_android_textColorHint, 0xFF999999));
 

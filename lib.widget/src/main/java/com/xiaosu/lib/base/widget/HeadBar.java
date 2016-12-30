@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -183,11 +184,11 @@ public class HeadBar extends RelativeLayout {
         tvLeft.setOnClickListener(listener);
     }
 
-    public void setTvRight(String text) {
+    public void setTvRight(CharSequence text) {
         tvRight.setText(text);
     }
 
-    public void setTitle(String text) {
+    public void setTitle(CharSequence text) {
         tvMiddle.setText(text);
     }
 
@@ -212,11 +213,15 @@ public class HeadBar extends RelativeLayout {
     }
 
     public void setRightImage(int id) {
-        tvRight.setCompoundDrawablesWithIntrinsicBounds(
-                null,
-                null,
-                getResources().getDrawable(id),
-                null);
+        tvRight.setCompoundDrawablesWithIntrinsicBounds(0, 0, id, 0);
+    }
+
+    public void setRightDrawable(Drawable drawable) {
+        tvRight.setCompoundDrawablesWithIntrinsicBounds(null, null, drawable, null);
+    }
+
+    public void setTitleTextColor(int color) {
+        tvMiddle.setTextColor(color);
     }
 
     public View getRightView() {

@@ -105,16 +105,18 @@ public class TabLayout extends HorizontalScrollView {
     }
 
     public void selectItem(int position) {
+        View selectedChild = mTabContainer.getChildAt(position);
         if (lastPosition == -1) {
-            mTabContainer.getChildAt(position).setSelected(true);
+            selectedChild.setSelected(true);
             if (null != listener)
                 listener.onTabSelected(position);
         } else if (lastPosition != position) {
-            mTabContainer.getChildAt(position).setSelected(true);
+            selectedChild.setSelected(true);
             mTabContainer.getChildAt(lastPosition).setSelected(false);
             if (null != listener)
                 listener.onTabSelected(position);
         }
+        smoothScrollTo(selectedChild.getLeft(), 0);
         lastPosition = position;
     }
 
