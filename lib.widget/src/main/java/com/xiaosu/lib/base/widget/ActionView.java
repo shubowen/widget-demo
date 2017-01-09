@@ -3,6 +3,7 @@ package com.xiaosu.lib.base.widget;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -44,6 +45,9 @@ public class ActionView extends RelativeLayout {
         tvLeft.setText(a.getString(R.styleable.ActionView_leftText));
         tvLeft.setTextSize(TypedValue.COMPLEX_UNIT_PX, a.getDimensionPixelSize(R.styleable.ActionView_leftTextSize, (int) (16 * density)));
         tvLeft.setTextColor(a.getColor(R.styleable.ActionView_leftTextColor, 0XFF333333));
+
+        if (a.hasValue(R.styleable.ActionView_rightTextColor))
+            tvRight.setTextColor(a.getColor(R.styleable.ActionView_rightTextColor, 0XFF333333));
         tvRight.setTextSize(TypedValue.COMPLEX_UNIT_PX, a.getDimensionPixelSize(R.styleable.ActionView_rightTextSize, (int) (16 * density)));
         tvRight.setHint(a.getString(R.styleable.ActionView_rightText));
 
@@ -224,6 +228,20 @@ public class ActionView extends RelativeLayout {
 
     public void setOnRightClickListener(OnClickListener listener) {
         tvRight.setOnClickListener(listener);
+    }
+
+    public void setRightTextMarquee() {
+//        android:singleLine="true"
+//        android:ellipsize="marquee"
+//        android:marqueeRepeatLimit="marquee_forever"
+        tvRight.setSingleLine();
+        tvRight.setEllipsize(TextUtils.TruncateAt.MARQUEE);
+        tvRight.setMarqueeRepeatLimit(-1);
+
+        tvRight.setFocusable(true);
+        tvRight.setFocusableInTouchMode(true);
+
+        tvRight.requestFocus();
     }
 
     public TextView getTvLeft() {

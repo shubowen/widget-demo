@@ -16,7 +16,6 @@
         android:layout_alignParentRight="true"
         android:layout_toRightOf="@+id/tv_left"
         android:drawablePadding="10dp"
-        android:ellipsize="end"
         android:gravity="center_vertical|right"
         android:singleLine="true"
         android:textColorHint="#999999"/>

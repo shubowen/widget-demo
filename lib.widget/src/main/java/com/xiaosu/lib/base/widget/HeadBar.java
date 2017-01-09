@@ -13,6 +13,7 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -166,13 +167,32 @@ public class HeadBar extends RelativeLayout {
     public View setCenterLayout(int layoutRes) {
         tvMiddle.setVisibility(GONE);
         centerLayout = LayoutInflater.from(getContext()).inflate(layoutRes, this, false);
-        if (null == centerLayout.getLayoutParams()) {
-            LayoutParams params = new LayoutParams(-2, -2);
-            params.addRule(RelativeLayout.CENTER_VERTICAL);
-            params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+
+        LayoutParams params = (LayoutParams) centerLayout.getLayoutParams();
+        if (null == params) {
+            params = new LayoutParams(-2, -2);
+            params.addRule(RelativeLayout.CENTER_IN_PARENT);
             centerLayout.setLayoutParams(params);
         }
-        addView(centerLayout);
+        params.addRule(RelativeLayout.LEFT_OF, R.id.tv_right);
+        params.addRule(RelativeLayout.RIGHT_OF, R.id.tv_left);
+
+        if (params.width != -1) {
+            //如果centerLayout不是match_parent
+            FrameLayout frameLayout = new FrameLayout(getContext());
+            LayoutParams containerParams = new LayoutParams(-1, -2);
+            containerParams.addRule(RelativeLayout.CENTER_VERTICAL);
+
+            containerParams.addRule(RelativeLayout.LEFT_OF, R.id.tv_right);
+            containerParams.addRule(RelativeLayout.RIGHT_OF, R.id.tv_left);
+
+            LayoutInflater.from(getContext()).inflate(layoutRes, frameLayout);
+            addView(frameLayout, containerParams);
+            return frameLayout.getChildAt(0);
+        } else {
+            addView(centerLayout);
+        }
+
         return centerLayout;
     }
 

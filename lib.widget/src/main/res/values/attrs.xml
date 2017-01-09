@@ -161,4 +161,10 @@
         <attr name="animAlphaStart" format="float"/>
     </declare-styleable>
 
+    <declare-styleable name="SwipeMenuLayout">
+        <attr name="swipeEnable" format="boolean"/>
+        <attr name="IOS" format="boolean"/>
+        <attr name="leftSwipe" format="boolean"/>
+    </declare-styleable>
+
 </resources>

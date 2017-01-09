@@ -5,9 +5,12 @@
               android:gravity="center"
               android:orientation="vertical">
 
+
     <com.xiaosu.lib.base.widget.InputView
+        android:id="@+id/inputView"
         android:layout_width="match_parent"
         android:layout_height="50dp"
+        android:gravity="right|center_vertical"
         android:hint="请输入信息"
         android:imeOptions="actionNext"
         android:text="提示"/>

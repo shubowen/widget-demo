@@ -10,7 +10,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 24
         versionCode 1
-        versionName "1.0"
+        versionName "1.1.7-SNAPSHOT"
     }
     buildTypes {
         release {
@@ -23,6 +23,7 @@ android {
 dependencies {
     provided "com.android.support:support-v4:$rootProject.ext.supportLibVersion"
     provided "com.android.support:appcompat-v7:$rootProject.ext.supportLibVersion"
+    provided "com.android.support:recyclerview-v7:$rootProject.ext.supportLibVersion"
     provided 'io.reactivex:rxandroid:1.2.1'
 }
 
@@ -53,7 +54,7 @@ uploadArchives {
             url 'http://117.78.40.97:9003/nexus/content/repositories/releases/'//仓库地址
             groupId "com.xiaosu.lib"
             artifactId "widget"
-            version '1.1.6-SNAPSHOT'
+            version '1.1.7-SNAPSHOT'
         }
     }
 }
