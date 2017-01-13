@@ -54,7 +54,7 @@ uploadArchives {
             url 'http://117.78.40.97:9003/nexus/content/repositories/releases/'//仓库地址
             groupId "com.xiaosu.lib"
             artifactId "widget"
-            version '1.1.7-SNAPSHOT'
+            version '1.1.8-SNAPSHOT'
         }
     }
 }

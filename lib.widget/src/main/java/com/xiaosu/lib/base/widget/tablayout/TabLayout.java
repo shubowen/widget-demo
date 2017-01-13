@@ -120,6 +120,16 @@ public class TabLayout extends HorizontalScrollView {
         lastPosition = position;
     }
 
+    public void notifyCurrentIndexSelected() {
+        if (lastPosition == -1 || null == listener) return;
+
+        listener.onTabSelected(lastPosition);
+    }
+
+    public int getCurrentIndex() {
+        return lastPosition;
+    }
+
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         mTabContainer.setMinimumWidth(getWidth() - getPaddingRight() - getPaddingLeft());

@@ -47,6 +47,7 @@ import android.support.v4.view.ViewGroupCompat;
 import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
 import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat;
 import android.support.v4.widget.ScrollerCompat;
+import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -64,12 +65,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.R.attr.colorLongPressedHighlight;
-import static android.R.attr.duration;
-import static android.R.attr.gravity;
-import static android.R.attr.offset;
-import static android.R.attr.top;
 
 /**
  * DrawerLayout acts as a top-level container for window content that allows for
@@ -120,8 +115,12 @@ public class DrawerLayout extends ViewGroup implements
     private View mContentView;
     private int mTotalOffset;
     private boolean mNestedScrollInProgress;
-    private boolean mIsBeingDragged;
+    private boolean mInterceptForTap;
     private boolean mInterceptForNonNestedScrollChild;
+    private boolean mLayoutForOpenDrawer;
+
+    private int mWidthMeasureSpec;
+    private int mHeightMeasureSpec;
 
     @IntDef({STATE_IDLE, STATE_DRAGGING, STATE_SETTLING})
     @Retention(RetentionPolicy.SOURCE)
@@ -371,6 +370,10 @@ public class DrawerLayout extends ViewGroup implements
         mScroller = ScrollerCompat.create(context, sInterpolator);
 
         setNestedScrollingEnabled(true);
+    }
+
+    public void setNestedScrollingEnabled(boolean enabled) {
+        mNestedScrollingChildHelper.setNestedScrollingEnabled(enabled);
     }
 
     /**
@@ -698,16 +701,28 @@ public class DrawerLayout extends ViewGroup implements
         if (slideOffset == lp.onScreen) {
             return;
         }
-
-        if (slideOffset == 1.0f) lp.openState = LayoutParams.FLAG_IS_OPENED;
-        if (slideOffset == 0.0f) lp.openState = LayoutParams.FLAG_IS_CLOSED;
-
         lp.onScreen = slideOffset;
-        dispatchOnDrawerSlide(mDrawerView, slideOffset);
-    }
 
-    float getDrawerViewOffset(View drawerView) {
-        return ((LayoutParams) drawerView.getLayoutParams()).onScreen;
+        lp.onScreen = lp.onScreen > 1.0f ? 1.0f : lp.onScreen;
+        lp.onScreen = lp.onScreen < 0.0f ? 0.0f : lp.onScreen;
+
+        //阴影透明度
+        mScrimOpacity = lp.onScreen;
+
+        if (lp.onScreen == 1.0f) {
+            mScroller.abortAnimation();
+            lp.openState = LayoutParams.FLAG_IS_OPENED;
+        }
+        if (lp.onScreen == 0.0f) {
+            mScroller.abortAnimation();
+            lp.openState = LayoutParams.FLAG_IS_CLOSED;
+            if (mDrawerView.getVisibility() != INVISIBLE)
+                mDrawerView.setVisibility(INVISIBLE);
+        }
+
+        ViewCompat.postInvalidateOnAnimation(this);
+
+        dispatchOnDrawerSlide(mDrawerView, slideOffset);
     }
 
     /**
@@ -786,33 +801,18 @@ public class DrawerLayout extends ViewGroup implements
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+
+        mWidthMeasureSpec = widthMeasureSpec;
+        mHeightMeasureSpec = heightMeasureSpec;
+
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int heightMode = MeasureSpec.getMode(heightMeasureSpec);
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);
         int heightSize = MeasureSpec.getSize(heightMeasureSpec);
 
         if (widthMode != MeasureSpec.EXACTLY || heightMode != MeasureSpec.EXACTLY) {
-            if (isInEditMode()) {
-                // Don't crash the layout editor. Consume all of the space if specified
-                // or pick a magic number from thin air otherwise.
-                // TODO Better communication with tools of this bogus state.
-                // It will crash on a real device.
-                if (widthMode == MeasureSpec.AT_MOST) {
-                    widthMode = MeasureSpec.EXACTLY;
-                } else if (widthMode == MeasureSpec.UNSPECIFIED) {
-                    widthMode = MeasureSpec.EXACTLY;
-                    widthSize = 300;
-                }
-                if (heightMode == MeasureSpec.AT_MOST) {
-                    heightMode = MeasureSpec.EXACTLY;
-                } else if (heightMode == MeasureSpec.UNSPECIFIED) {
-                    heightMode = MeasureSpec.EXACTLY;
-                    heightSize = 300;
-                }
-            } else {
-                throw new IllegalArgumentException(
-                        "DrawerLayout must be measured with MeasureSpec.EXACTLY.");
-            }
+            throw new IllegalArgumentException(
+                    "DrawerLayout must be measured with MeasureSpec.EXACTLY.");
         }
 
         setMeasuredDimension(widthSize, heightSize);
@@ -842,19 +842,20 @@ public class DrawerLayout extends ViewGroup implements
                         ViewCompat.setElevation(child, mDrawerElevation);
                     }
                 }
-                final int drawerWidthSpec = getChildMeasureSpec(widthMeasureSpec,
-                        lp.leftMargin + lp.rightMargin,
-                        lp.width);
-                final int drawerHeightSpec = getChildMeasureSpec(heightMeasureSpec,
-                        mMinDrawerMargin + lp.topMargin + lp.bottomMargin,
-                        lp.height);
-                child.measure(drawerWidthSpec, drawerHeightSpec);
-            } else {
-                throw new IllegalStateException("Child " + child + " at index " + i +
-                        " does not have a valid layout_gravity - must be Gravity.LEFT, " +
-                        "Gravity.RIGHT or Gravity.NO_GRAVITY");
+                measureDrawer(lp, widthMeasureSpec, heightMeasureSpec);
             }
         }
+    }
+
+    void measureDrawer(LayoutParams lp, int widthMeasureSpec, int heightMeasureSpec) {
+        final int drawerWidthSpec = getChildMeasureSpec(widthMeasureSpec,
+                lp.leftMargin + lp.rightMargin,
+                lp.width);
+        final int drawerHeightSpec = getChildMeasureSpec(heightMeasureSpec,
+                mMinDrawerMargin + lp.topMargin + lp.bottomMargin,
+                lp.height);
+
+        mDrawerView.measure(drawerWidthSpec, drawerHeightSpec);
     }
 
     private void resolveShadowDrawables() {
@@ -919,7 +920,6 @@ public class DrawerLayout extends ViewGroup implements
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         mInLayout = true;
-        final int width = r - l;
         final int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             final View child = getChildAt(i);
@@ -932,28 +932,17 @@ public class DrawerLayout extends ViewGroup implements
 
             if (mContentView == child) {
                 child.layout(lp.leftMargin, lp.topMargin,
-                        lp.leftMargin + child.getMeasuredWidth(),
-                        lp.topMargin + child.getMeasuredHeight());
-            } else { // Drawer, if it wasn't onMeasure would have thrown an exception.
-                final int childWidth = child.getMeasuredWidth();
-                final int childHeight = child.getMeasuredHeight();
-
-                int childTop = getHeight() - Math.round(childHeight * lp.onScreen);
-                float newOffset = (float) (childWidth + childTop) / childWidth;
-
-                final boolean changeOffset = newOffset != lp.onScreen;
-
-                child.layout(lp.leftMargin, childTop,
-                        lp.leftMargin + child.getMeasuredWidth(),
-                        childTop + child.getMeasuredHeight());
-
-//                if (changeOffset) {
-//                    setDrawerViewOffset(child, newOffset);
-//                }
-
-                final int newVisibility = lp.onScreen > 0 ? VISIBLE : INVISIBLE;
-                if (child.getVisibility() != newVisibility) {
-                    child.setVisibility(newVisibility);
+                        lp.leftMargin + child.getMeasuredWidth(), lp.topMargin + child.getMeasuredHeight());
+            } else if (mDrawerView == child) {
+                layoutDrawer(lp);
+                if (mLayoutForOpenDrawer) {
+                    post(new Runnable() {
+                        @Override
+                        public void run() {
+                            openDrawer();
+                        }
+                    });
+                    mLayoutForOpenDrawer = false;
                 }
             }
         }
@@ -961,17 +950,37 @@ public class DrawerLayout extends ViewGroup implements
         mFirstLayout = false;
     }
 
+    void layoutDrawer(LayoutParams lp) {
+        final int childWidth = mDrawerView.getMeasuredWidth();
+        final int childHeight = mDrawerView.getMeasuredHeight();
+
+        int childTop = getHeight() - Math.round(childHeight * lp.onScreen);
+
+        mDrawerView.layout(lp.leftMargin, childTop,
+                lp.leftMargin + childWidth, childTop + childHeight);
+
+        final int newVisibility = lp.onScreen > 0 ? VISIBLE : INVISIBLE;
+        if (mDrawerView.getVisibility() != newVisibility) {
+            mDrawerView.setVisibility(newVisibility);
+        }
+    }
+
+    /**
+     * 刷新Drawer的位置
+     */
+    public void notifyDrawerBoundAndLocation() {
+        final LayoutParams lp = (LayoutParams) mDrawerView.getLayoutParams();
+        measureDrawer(lp, mWidthMeasureSpec, mHeightMeasureSpec);
+        layoutDrawer(lp);
+    }
+
     @Override
     public void requestLayout() {
-        if (!mInLayout) {
-            super.requestLayout();
-        }
+        super.requestLayout();
     }
 
     @Override
     public void computeScroll() {
-        mScrimOpacity = ((LayoutParams) mDrawerView.getLayoutParams()).onScreen;
-
         if (mScroller.computeScrollOffset()) {
             final int dy = mScroller.getCurrY() - mDrawerView.getTop();
             if (dy != 0) {
@@ -983,64 +992,23 @@ public class DrawerLayout extends ViewGroup implements
     /**
      * 纵向移动抽屉
      *
-     * @param dy
+     * @param dy 手指滚动的距离
+     * @return 消耗的滚动距离
      */
-    private void moveDrawerVertical(int dy) {
+    private int moveDrawerVertical(int dy) {
+
+        int wTop = mDrawerView.getTop() + dy;
+        if (wTop < (getHeight() - mDrawerView.getHeight())) {
+            int fTop = getHeight() - mDrawerView.getHeight();
+            dy = fTop - mDrawerView.getTop();
+        } else if (wTop > getHeight()) {
+            dy = getHeight() - mDrawerView.getTop();
+        }
+
         ViewCompat.offsetTopAndBottom(mDrawerView, dy);
         float offset = (getHeight() - mDrawerView.getTop()) * 1f / mDrawerView.getHeight();
         setDrawerViewOffset(offset);
-        ViewCompat.postInvalidateOnAnimation(this);
-    }
-
-    private static boolean hasOpaqueBackground(View v) {
-        final Drawable bg = v.getBackground();
-        if (bg != null) {
-            return bg.getOpacity() == PixelFormat.OPAQUE;
-        }
-        return false;
-    }
-
-    /**
-     * Set a drawable to draw in the insets area for the status bar.
-     * Note that this will only be activated if this DrawerLayout fitsSystemWindows.
-     *
-     * @param bg Background drawable to draw behind the status bar
-     */
-    public void setStatusBarBackground(Drawable bg) {
-        mStatusBarBackground = bg;
-        invalidate();
-    }
-
-    /**
-     * Gets the drawable used to draw in the insets area for the status bar.
-     *
-     * @return The status bar background drawable, or null if none set
-     */
-    public Drawable getStatusBarBackgroundDrawable() {
-        return mStatusBarBackground;
-    }
-
-    /**
-     * Set a drawable to draw in the insets area for the status bar.
-     * Note that this will only be activated if this DrawerLayout fitsSystemWindows.
-     *
-     * @param resId Resource id of a background drawable to draw behind the status bar
-     */
-    public void setStatusBarBackground(int resId) {
-        mStatusBarBackground = resId != 0 ? ContextCompat.getDrawable(getContext(), resId) : null;
-        invalidate();
-    }
-
-    /**
-     * Set a drawable to draw in the insets area for the status bar.
-     * Note that this will only be activated if this DrawerLayout fitsSystemWindows.
-     *
-     * @param color Color to use as a background drawable to draw behind the status bar
-     *              in 0xAARRGGBB format.
-     */
-    public void setStatusBarBackgroundColor(@ColorInt int color) {
-        mStatusBarBackground = new ColorDrawable(color);
-        invalidate();
+        return dy;
     }
 
     public void onRtlPropertiesChanged(int layoutDirection) {
@@ -1058,30 +1026,12 @@ public class DrawerLayout extends ViewGroup implements
 
     @Override
     protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
-        final int height = getHeight();
         final boolean drawingContent = child == mContentView;
-        int clipLeft = 0, clipRight = getWidth();
+        int clipBottom = mDrawerView.getTop();
 
         final int restoreCount = canvas.save();
         if (drawingContent) {
-            final int childCount = getChildCount();
-            for (int i = 0; i < childCount; i++) {
-                final View v = getChildAt(i);
-                if (v == child || v.getVisibility() != VISIBLE ||
-                        !hasOpaqueBackground(v) || !isDrawerView(v) ||
-                        v.getHeight() < height) {
-                    continue;
-                }
-
-                if (checkDrawerViewAbsoluteGravity(v, Gravity.LEFT)) {
-                    final int vright = v.getRight();
-                    if (vright > clipLeft) clipLeft = vright;
-                } else {
-                    final int vleft = v.getLeft();
-                    if (vleft < clipRight) clipRight = vleft;
-                }
-            }
-            canvas.clipRect(clipLeft, 0, clipRight, getHeight());
+            canvas.clipRect(0, 0, getWidth(), clipBottom);
         }
         final boolean result = super.drawChild(canvas, child, drawingTime);
         canvas.restoreToCount(restoreCount);
@@ -1092,19 +1042,8 @@ public class DrawerLayout extends ViewGroup implements
             final int color = imag << 24 | (mScrimColor & 0xffffff);
             mScrimPaint.setColor(color);
 
-            canvas.drawRect(clipLeft, 0, clipRight, getHeight(), mScrimPaint);
-        } /*else if (mShadowLeftResolved != null
-                && checkDrawerViewAbsoluteGravity(child, Gravity.BOTTOM)) {
-            final int shadowWidth = mShadowLeftResolved.getIntrinsicWidth();
-            final int childRight = child.getRight();
-            final int drawerPeekDistance = mDragger.getEdgeSize();
-            final float alpha =
-                    Math.max(0, Math.min((float) childRight / drawerPeekDistance, 1.f));
-            mShadowLeftResolved.setBounds(childRight, child.getTop(),
-                    childRight + shadowWidth, child.getBottom());
-            mShadowLeftResolved.setAlpha((int) (0xff * alpha));
-            mShadowLeftResolved.draw(canvas);
-        }*/
+            canvas.drawRect(0, 0, getWidth(), clipBottom, mScrimPaint);
+        }
         return result;
     }
 
@@ -1133,131 +1072,110 @@ public class DrawerLayout extends ViewGroup implements
         return false;
     }
 
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        final int action = MotionEventCompat.getActionMasked(ev);
-
-        boolean interceptForTap = false;
-        switch (action) {
-            case MotionEvent.ACTION_DOWN: {
-                final float x = ev.getX();
-                final float y = ev.getY();
-                mInitialMotionY = y;
-                if (mScrimOpacity > 0) {
-                    final View child = findTopChildUnder(this, (int) x, (int) y);
-                    if (child != null && child == mContentView) {
-                        interceptForTap = true;
-                    } else if (child != null && child == mDrawerView && child instanceof ViewGroup) {
-                        int insetX = (int) (x - child.getLeft());
-                        int insetY = (int) (y - child.getTop());
-                        View topChild = findTopChildUnder(child, insetX, insetY);
-                        //点击到mDrawerView上不能嵌套滚动的View
-                        if (null != topChild && !ViewCompat.isNestedScrollingEnabled(topChild)) {
-                            mInterceptForNonNestedScrollChild = true;
-                            return true;
-                        }
-                    }
-                }
-                mDisallowInterceptRequested = false;
-                mChildrenCanceledTouch = false;
-                break;
-            }
-            case MotionEvent.ACTION_MOVE: {
-                float dy = ev.getY() - mInitialMotionY;
-                if (Math.abs(dy) > mTouchSlop && !mIsBeingDragged) {
-                    mIsBeingDragged = true;
-                }
-                break;
-            }
-        }
-        return super.dispatchTouchEvent(ev);
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        final int action = MotionEventCompat.getActionMasked(ev);
-
-        boolean interceptForTap = false;
-        mInterceptForNonNestedScrollChild = false;
-
-        switch (action) {
-            case MotionEvent.ACTION_DOWN: {
-                final float x = ev.getX();
-                final float y = ev.getY();
-                mInitialMotionY = y;
-                if (mScrimOpacity > 0) {
-                    final View child = findTopChildUnder(this, (int) x, (int) y);
-                    if (child != null && child == mContentView) {
-                        interceptForTap = true;
-                    } else if (child != null && child == mDrawerView && child instanceof ViewGroup) {
-                        int insetX = (int) (x - child.getLeft());
-                        int insetY = (int) (y - child.getTop());
-                        View topChild = findTopChildUnder(child, insetX, insetY);
-                        //点击到mDrawerView上不能嵌套滚动的View
-                        if (null != topChild && !ViewCompat.isNestedScrollingEnabled(topChild)) {
-                            mInterceptForNonNestedScrollChild = true;
-                            return true;
-                        }
-                    }
-                }
-                mDisallowInterceptRequested = false;
-                mChildrenCanceledTouch = false;
-                break;
-            }
-
-            case MotionEvent.ACTION_MOVE: {
-                float dy = ev.getY() - mInitialMotionY;
-                if (Math.abs(dy) > mTouchSlop && !mIsBeingDragged) {
-                    mIsBeingDragged = true;
-                }
-                Log.i(TAG, "onInterceptTouchEvent: " + mIsBeingDragged);
-                break;
-            }
-
-            case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_UP: {
-                mDisallowInterceptRequested = false;
-                mChildrenCanceledTouch = false;
-                mInterceptForNonNestedScrollChild = false;
-            }
-        }
-
-        return interceptForTap || mIsBeingDragged;
-    }
-
     float lastTouchY = 0;
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         final int action = ev.getAction();
+//        Log.i(TAG, "onTouchEvent: " + ev);
+
         switch (action & MotionEventCompat.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN: {
-                lastTouchY = ev.getY();
-
                 mDisallowInterceptRequested = false;
                 mChildrenCanceledTouch = false;
-                mIsBeingDragged = false;
+                mInterceptForTap = false;
+                mInterceptForNonNestedScrollChild = false;
+                mTotalOffset = 0;
+
+                final float x = ev.getX();
+                final float y = ev.getY();
+                mInitialMotionY = lastTouchY = y;
+                if (mScrimOpacity > 0) {
+                    final View child = findTopChildUnder(this, (int) x, (int) y);
+                    if (child != null && child == mContentView) {
+                        mInterceptForTap = true;
+                    } else if (child != null && child == mDrawerView && !(child instanceof ViewGroup)
+                            && !ViewCompat.isNestedScrollingEnabled(child)) {
+                        mInterceptForNonNestedScrollChild = true;
+                    } else if (child != null && child == mDrawerView && child instanceof ViewGroup) {
+                        int insetX = (int) (x - child.getLeft());
+                        int insetY = (int) (y - child.getTop());
+                        View topChild = findTopChildUnder(child, insetX, insetY);
+                        //点击到mDrawerView上不能嵌套滚动的View
+                        if (null != topChild && !ViewCompat.isNestedScrollingEnabled(topChild)) {
+                            mInterceptForNonNestedScrollChild = true;
+                        }
+                    }
+                }
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
-                Log.i(TAG, "onTouchEvent: " + mIsBeingDragged);
-                if (mIsBeingDragged) {
-                    int dy = Math.round(ev.getY() - lastTouchY);
-                    moveDrawerVertical(dy);
-                    lastTouchY = ev.getY();
+                float yDiff = Math.abs(ev.getY() - mInitialMotionY);
+                if (yDiff > mTouchSlop && mInterceptForNonNestedScrollChild) {
+                    int dy = (int) (ev.getY() - lastTouchY);
+                    mTotalOffset += moveDrawerVertical(dy);
                 }
+                lastTouchY = ev.getY();
                 break;
             }
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL: {
+                if (mInterceptForTap) closeDrawer();
+
+                if (mInterceptForNonNestedScrollChild && mTotalOffset != 0) {
+                    boolean openDrawer = mTotalOffset <= mDrawerView.getHeight() * 0.4f;
+                    if (openDrawer) {
+                        openDrawer();
+                    } else {
+                        closeDrawer();
+                    }
+                    mTotalOffset = 0;
+                }
+
                 mDisallowInterceptRequested = false;
                 mChildrenCanceledTouch = false;
-                mIsBeingDragged = false;
+                mInterceptForTap = false;
+                mInterceptForNonNestedScrollChild = false;
                 break;
             }
         }
 
-        return mInterceptForNonNestedScrollChild;
+        return mInterceptForTap || mInterceptForNonNestedScrollChild;
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+//        Log.i(TAG, "onInterceptTouchEvent: " + ev);
+        final int action = ev.getAction();
+        boolean interceptForTap = false;
+        boolean interceptForNonNestedScrollChild = false;
+        switch (action & MotionEventCompat.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN: {
+                if (mScrimOpacity > 0) {
+                    final float x = ev.getX();
+                    final float y = ev.getY();
+                    final View child = findTopChildUnder(this, (int) x, (int) y);
+                    if (child != null && child == mContentView) {
+                        interceptForTap = true;
+                    } else if (child != null && child == mDrawerView && !(child instanceof ViewGroup)
+                            && !ViewCompat.isNestedScrollingEnabled(child)) {
+                        interceptForNonNestedScrollChild = true;
+                    } else if (child != null && child == mDrawerView && child instanceof ViewGroup) {
+                        int insetX = (int) (x - child.getLeft());
+                        int insetY = (int) (y - child.getTop());
+                        View topChild = findTopChildUnder(child, insetX, insetY);
+                        //点击到mDrawerView上不能嵌套滚动的View
+                        if (null != topChild && !ViewCompat.isNestedScrollingEnabled(topChild)) {
+                            interceptForNonNestedScrollChild = true;
+                        }
+                    }
+                }
+            }
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL: {
+            }
+        }
+        return interceptForTap || interceptForNonNestedScrollChild;
     }
 
     View findTopChildUnder(View view, int x, int y) {
@@ -1329,7 +1247,11 @@ public class DrawerLayout extends ViewGroup implements
      * Open the specified drawer view by animating it into view.
      */
     public void openDrawer() {
-        openDrawer(mDrawerView, true);
+        openDrawer(mDrawerView, true, false);
+    }
+
+    public void openDrawer(boolean requestLayout) {
+        openDrawer(mDrawerView, true, requestLayout);
     }
 
     /**
@@ -1338,21 +1260,25 @@ public class DrawerLayout extends ViewGroup implements
      * @param drawerView Drawer view to open
      * @param animate    Whether opening of the drawer should be animated.
      */
-    private void openDrawer(View drawerView, boolean animate) {
-        if (!isDrawerView(drawerView)) {
-            throw new IllegalArgumentException("View " + drawerView + " is not a sliding drawer");
-        }
-
+    private void openDrawer(View drawerView, boolean animate, boolean requestLayout) {
         final LayoutParams lp = (LayoutParams) drawerView.getLayoutParams();
+
+        if (lp.openState == LayoutParams.FLAG_IS_OPENING) return;
+
         if (mFirstLayout) {
             lp.onScreen = 1.f;
             lp.openState = LayoutParams.FLAG_IS_OPENED;
 
             updateChildrenImportantForAccessibility(drawerView, true);
         } else if (animate) {
-            lp.openState = LayoutParams.FLAG_IS_OPENING;
-            int top = getHeight() - drawerView.getHeight();
+            if (requestLayout) {
+                mLayoutForOpenDrawer = true;
+                return;
+            }
 
+            lp.openState = LayoutParams.FLAG_IS_OPENING;
+
+            int top = getHeight() - drawerView.getHeight();
             if (drawerView.getVisibility() != VISIBLE) drawerView.setVisibility(VISIBLE);
 
             startScroll(top);
@@ -1367,7 +1293,6 @@ public class DrawerLayout extends ViewGroup implements
      * @param animate    Whether closing of the drawer should be animated.
      */
     private void closeDrawer(View drawerView, boolean animate) {
-
         final LayoutParams lp = (LayoutParams) drawerView.getLayoutParams();
         if (mFirstLayout) {
             lp.onScreen = 0.f;
@@ -1389,12 +1314,6 @@ public class DrawerLayout extends ViewGroup implements
      * Close the specified drawer by animating it out of view.
      */
     public void closeDrawer() {
-
-        StackTraceElement[] stackTrace = new Throwable().getStackTrace();
-
-        Log.i(TAG, "closeDrawer: " + stackTrace[1]);
-        Log.i(TAG, "closeDrawer: " + stackTrace[2]);
-
         closeDrawer(true);
     }
 
@@ -1535,21 +1454,6 @@ public class DrawerLayout extends ViewGroup implements
         return null;
     }
 
-    void cancelChildViewTouch() {
-        // Cancel child touches
-        if (!mChildrenCanceledTouch) {
-            final long now = SystemClock.uptimeMillis();
-            final MotionEvent cancelEvent = MotionEvent.obtain(now, now,
-                    MotionEvent.ACTION_CANCEL, 0.0f, 0.0f, 0);
-            final int childCount = getChildCount();
-            for (int i = 0; i < childCount; i++) {
-                getChildAt(i).dispatchTouchEvent(cancelEvent);
-            }
-            cancelEvent.recycle();
-            mChildrenCanceledTouch = true;
-        }
-    }
-
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && hasVisibleDrawer()) {
@@ -1606,45 +1510,6 @@ public class DrawerLayout extends ViewGroup implements
                 != ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
                 && ViewCompat.getImportantForAccessibility(child)
                 != ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_NO;
-    }
-
-    /**
-     * @return child在竖直方向上是否能向上滚动
-     */
-    public boolean canChildScrollUp(View target) {
-
-        if (android.os.Build.VERSION.SDK_INT < 14) {
-            if (target instanceof AbsListView) {
-                final AbsListView absListView = (AbsListView) target;
-                return absListView.getChildCount() > 0
-                        && (absListView.getFirstVisiblePosition() > 0 || absListView.getChildAt(0)
-                        .getTop() < absListView.getPaddingTop());
-            } else {
-                return ViewCompat.canScrollVertically(target, -1) || target.getScrollY() > 0;
-            }
-        } else {
-            return ViewCompat.canScrollVertically(target, -1);
-        }
-    }
-
-    public boolean canChildScrollDown(View target) {
-
-        if (android.os.Build.VERSION.SDK_INT < 14) {
-            if (target instanceof AbsListView) {
-                final AbsListView absListView = (AbsListView) target;
-                int count = absListView.getAdapter().getCount();
-                int fristPos = absListView.getFirstVisiblePosition();
-                if (fristPos == 0 && absListView.getChildAt(0).getTop() >= absListView.getPaddingTop()) {
-                    return false;
-                }
-                int lastPos = absListView.getLastVisiblePosition();
-                return lastPos > 0 && count > 0 && lastPos == count - 1;
-            } else {
-                return ViewCompat.canScrollVertically(target, 1) || target.getScrollY() < 0;
-            }
-        } else {
-            return ViewCompat.canScrollVertically(target, 1);
-        }
     }
 
     public static class LayoutParams extends MarginLayoutParams {
