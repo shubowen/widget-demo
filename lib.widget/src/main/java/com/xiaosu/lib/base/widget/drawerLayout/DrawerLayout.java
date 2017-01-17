@@ -66,6 +66,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.R.attr.borderlessButtonStyle;
+import static android.R.attr.x;
+import static android.R.attr.y;
+
 /**
  * DrawerLayout acts as a top-level container for window content that allows for
  * interactive "drawer" views to be pulled out from one or both vertical edges of the window.
@@ -986,6 +990,7 @@ public class DrawerLayout extends ViewGroup implements
             if (dy != 0) {
                 moveDrawerVertical(dy);
             }
+            ViewCompat.postInvalidateOnAnimation(this);
         }
     }
 
@@ -1072,7 +1077,7 @@ public class DrawerLayout extends ViewGroup implements
         return false;
     }
 
-    float lastTouchY = 0;
+    float lastTouchY = -1;
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
@@ -1094,24 +1099,15 @@ public class DrawerLayout extends ViewGroup implements
                     final View child = findTopChildUnder(this, (int) x, (int) y);
                     if (child != null && child == mContentView) {
                         mInterceptForTap = true;
-                    } else if (child != null && child == mDrawerView && !(child instanceof ViewGroup)
-                            && !ViewCompat.isNestedScrollingEnabled(child)) {
+                    } else {
                         mInterceptForNonNestedScrollChild = true;
-                    } else if (child != null && child == mDrawerView && child instanceof ViewGroup) {
-                        int insetX = (int) (x - child.getLeft());
-                        int insetY = (int) (y - child.getTop());
-                        View topChild = findTopChildUnder(child, insetX, insetY);
-                        //点击到mDrawerView上不能嵌套滚动的View
-                        if (null != topChild && !ViewCompat.isNestedScrollingEnabled(topChild)) {
-                            mInterceptForNonNestedScrollChild = true;
-                        }
                     }
                 }
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
                 float yDiff = Math.abs(ev.getY() - mInitialMotionY);
-                if (yDiff > mTouchSlop && mInterceptForNonNestedScrollChild) {
+                if (lastTouchY != -1 && yDiff > mTouchSlop && mInterceptForNonNestedScrollChild) {
                     int dy = (int) (ev.getY() - lastTouchY);
                     mTotalOffset += moveDrawerVertical(dy);
                 }
@@ -1131,7 +1127,7 @@ public class DrawerLayout extends ViewGroup implements
                     }
                     mTotalOffset = 0;
                 }
-
+                lastTouchY = -1;
                 mDisallowInterceptRequested = false;
                 mChildrenCanceledTouch = false;
                 mInterceptForTap = false;
@@ -1140,7 +1136,7 @@ public class DrawerLayout extends ViewGroup implements
             }
         }
 
-        return mInterceptForTap || mInterceptForNonNestedScrollChild;
+        return lastTouchY != -1;
     }
 
     @Override
@@ -1149,6 +1145,8 @@ public class DrawerLayout extends ViewGroup implements
         final int action = ev.getAction();
         boolean interceptForTap = false;
         boolean interceptForNonNestedScrollChild = false;
+        boolean interceptForNoChildHandle = false;
+
         switch (action & MotionEventCompat.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN: {
                 if (mScrimOpacity > 0) {
@@ -1157,15 +1155,26 @@ public class DrawerLayout extends ViewGroup implements
                     final View child = findTopChildUnder(this, (int) x, (int) y);
                     if (child != null && child == mContentView) {
                         interceptForTap = true;
-                    } else if (child != null && child == mDrawerView && !(child instanceof ViewGroup)
-                            && !ViewCompat.isNestedScrollingEnabled(child)) {
-                        interceptForNonNestedScrollChild = true;
-                    } else if (child != null && child == mDrawerView && child instanceof ViewGroup) {
-                        int insetX = (int) (x - child.getLeft());
-                        int insetY = (int) (y - child.getTop());
-                        View topChild = findTopChildUnder(child, insetX, insetY);
-                        //点击到mDrawerView上不能嵌套滚动的View
-                        if (null != topChild && !ViewCompat.isNestedScrollingEnabled(topChild)) {
+                    } else if (child != null && child == mDrawerView) {
+                        if (child instanceof ViewGroup) {
+                            int insetX = (int) (x - child.getLeft());
+                            int insetY = (int) (y - child.getTop());
+                            View topChild = findTopChildUnder(child, insetX, insetY);
+
+                            if (null == topChild)
+                                interceptForNoChildHandle = true;
+
+                            if (topChild instanceof ViewGroup) {
+                                MotionEvent event = MotionEvent.obtain(ev);
+                                event.offsetLocation(-child.getLeft(), -child.getTop());
+                                if (!anyChildWantMotionEvent(event, (ViewGroup) topChild))
+                                    interceptForNoChildHandle = true;
+                                event.recycle();
+                            } else if (!ViewCompat.isNestedScrollingEnabled(topChild)) {
+                                //点击到mDrawerView上不能嵌套滚动的View
+                                interceptForNonNestedScrollChild = true;
+                            }
+                        } else if (!ViewCompat.isNestedScrollingEnabled(child)) {
                             interceptForNonNestedScrollChild = true;
                         }
                     }
@@ -1175,7 +1184,34 @@ public class DrawerLayout extends ViewGroup implements
             case MotionEvent.ACTION_CANCEL: {
             }
         }
-        return interceptForTap || interceptForNonNestedScrollChild;
+        return interceptForTap || interceptForNonNestedScrollChild || interceptForNoChildHandle;
+    }
+
+    private boolean anyChildWantMotionEvent(MotionEvent ev, ViewGroup group) {
+        MotionEvent event = MotionEvent.obtain(ev);
+        event.offsetLocation(-group.getLeft(), -group.getTop());
+        //先找到点击的view
+        int childCount = group.getChildCount();
+        final float x = event.getX();
+        final float y = event.getY();
+
+        for (int i = 0; i < childCount; i++) {
+            View child = group.getChildAt(i);
+            if (x >= child.getLeft() && x < child.getRight() && y >= child.getTop() && y < child.getBottom()) {
+                if (child instanceof ViewGroup) {
+                    MotionEvent chileEvent = MotionEvent.obtain(event);
+                    chileEvent.offsetLocation(-child.getLeft(), -child.getTop());
+                    if (anyChildWantMotionEvent(chileEvent, (ViewGroup) child)) {
+                        chileEvent.recycle();
+                        return true;
+                    }
+                } else if (child.onTouchEvent(event)) {
+                    return true;
+                }
+            }
+        }
+        event.recycle();
+        return false;
     }
 
     View findTopChildUnder(View view, int x, int y) {
@@ -1275,7 +1311,6 @@ public class DrawerLayout extends ViewGroup implements
                 mLayoutForOpenDrawer = true;
                 return;
             }
-
             lp.openState = LayoutParams.FLAG_IS_OPENING;
 
             int top = getHeight() - drawerView.getHeight();
@@ -1307,7 +1342,7 @@ public class DrawerLayout extends ViewGroup implements
     void startScroll(int finalTop) {
         final int startTop = mDrawerView.getTop();
         final int dy = finalTop - startTop;
-        mScroller.startScroll(mDrawerView.getLeft(), startTop, 0, dy, 300);
+        mScroller.startScroll(0, startTop, 0, dy, 300);
     }
 
     /**
