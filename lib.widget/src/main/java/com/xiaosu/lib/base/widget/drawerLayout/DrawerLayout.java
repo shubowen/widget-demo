@@ -21,18 +21,14 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.os.SystemClock;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.AccessibilityDelegateCompat;
 import android.support.v4.view.GravityCompat;
@@ -49,7 +45,6 @@ import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat.Accessi
 import android.support.v4.widget.ScrollerCompat;
 import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -59,16 +54,11 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.animation.Interpolator;
-import android.widget.AbsListView;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.R.attr.borderlessButtonStyle;
-import static android.R.attr.x;
-import static android.R.attr.y;
 
 /**
  * DrawerLayout acts as a top-level container for window content that allows for
@@ -1165,13 +1155,15 @@ public class DrawerLayout extends ViewGroup implements
                                 interceptForNoChildHandle = true;
 
                             if (topChild instanceof ViewGroup) {
-                                MotionEvent event = MotionEvent.obtain(ev);
-                                event.offsetLocation(-child.getLeft(), -child.getTop());
-                                if (!anyChildWantMotionEvent(event, (ViewGroup) topChild))
-                                    interceptForNoChildHandle = true;
-                                event.recycle();
+                                if (!ViewCompat.isNestedScrollingEnabled(topChild)) {
+                                    MotionEvent event = MotionEvent.obtain(ev);
+                                    event.offsetLocation(-child.getLeft(), -child.getTop());
+                                    if (!anyChildWantMotionEvent(event, (ViewGroup) topChild))
+                                        interceptForNoChildHandle = true;
+                                    event.recycle();
+                                }
                             } else if (!ViewCompat.isNestedScrollingEnabled(topChild)) {
-                                //点击到mDrawerView上不能嵌套滚动的View
+                                //点击到mDrawerView上不能嵌套滚动的View(不是ViewGroup)
                                 interceptForNonNestedScrollChild = true;
                             }
                         } else if (!ViewCompat.isNestedScrollingEnabled(child)) {
@@ -1234,14 +1226,35 @@ public class DrawerLayout extends ViewGroup implements
     }
 
     @Override
-    public void onNestedScrollAccepted(View child, View target, int axes) {
-        super.onNestedScrollAccepted(child, target, axes);
-        mNestedScrollInProgress = true;
+    public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
+
     }
 
     @Override
-    public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
-        super.onNestedPreScroll(target, dx, dy, consumed);
+    public boolean onNestedFling(View target, float velocityX, float velocityY,
+                                 boolean consumed) {
+        return dispatchNestedFling(velocityX, velocityY, consumed);
+    }
+
+    @Override
+    public boolean dispatchNestedFling(float velocityX, float velocityY, boolean consumed) {
+        return mNestedScrollingChildHelper.dispatchNestedFling(velocityX, velocityY, consumed);
+    }
+
+    @Override
+    public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
+        return dispatchNestedPreFling(velocityX, velocityY);
+    }
+
+    @Override
+    public boolean dispatchNestedPreFling(float velocityX, float velocityY) {
+        return mNestedScrollingChildHelper.dispatchNestedPreFling(velocityX, velocityY);
+    }
+
+    @Override
+    public void onNestedScrollAccepted(View child, View target, int axes) {
+        mNestedScrollingParentHelper.onNestedScrollAccepted(child, target, axes);
+        mNestedScrollInProgress = true;
     }
 
     @Override

@@ -33,5 +33,5 @@ ext {
     buildToolsVersion = "24.0.1"
     minSdkVersion = 15
     //android官方支持库版本号
-    supportLibVersion = "23.2.1"
+    supportLibVersion = "25.0.1"
 }

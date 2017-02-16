@@ -26,25 +26,34 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
+            android:onClick="clickContent"
             android:text="这是要写要显示的内容"/>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:orientation="vertical">
 
-            <TextView
-                android:background="@color/colorAccent"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="80dp"
+                android:layout_height="60dp"
                 android:gravity="center"
-                android:text="这是抽屉的标题"/>
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:background="@color/colorAccent"
+                    android:gravity="center"
+                    android:text="这是抽屉的标题"/>
+
+            </LinearLayout>
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recycler_view"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 app:layoutManager="android.support.v7.widget.LinearLayoutManager"/>
 
         </LinearLayout>

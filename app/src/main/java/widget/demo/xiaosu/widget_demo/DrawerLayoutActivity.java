@@ -10,8 +10,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.xiaosu.lib.base.widget.drawerLayout.DrawerLayout;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class DrawerLayoutActivity extends AppCompatActivity {
@@ -19,22 +23,39 @@ public class DrawerLayoutActivity extends AppCompatActivity {
     RecyclerView mRecyclerView;
     private DrawerLayout mDrawerLayout;
 
+    List<String> data = new ArrayList<>();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_drawer_layout);
         findView();
 
-        mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setAdapter(new DrawerAdapter());
+        mRecyclerView.getLayoutManager().setAutoMeasureEnabled(true);
+        for (int i = 0; i < 20; i++) {
+            data.add("-----------" + i + "-----------");
+        }
+    }
+
+    public void clickTitle(View view){
+        Toast.makeText(this, "clickTitle", Toast.LENGTH_SHORT).show();
     }
 
     public void clickAnchor(View view) {
         if (!mDrawerLayout.isDrawerOpen()) {
+            if (null == mRecyclerView.getAdapter()) {
+                mDrawerLayout.openDrawer(true);
+                mRecyclerView.setAdapter(new DrawerAdapter());
+                return;
+            }
             mDrawerLayout.openDrawer();
         } else {
             mDrawerLayout.closeDrawer();
         }
+    }
+
+    public void clickContent(View view) {
+        Toast.makeText(this, "clickContent", Toast.LENGTH_SHORT).show();
     }
 
     private void findView() {
@@ -50,15 +71,23 @@ public class DrawerLayoutActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBindViewHolder(DrawerHolder holder, int position) {
+        public void onBindViewHolder(final DrawerHolder holder, int position) {
             TextView item = (TextView) holder.itemView;
             item.setGravity(Gravity.CENTER);
-            item.setText("-----------" + position + "-----------");
+            final String s = data.get(position);
+            item.setText(s);
+            item.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    data.remove(s);
+                    notifyItemRemoved(holder.getAdapterPosition());
+                }
+            });
         }
 
         @Override
         public int getItemCount() {
-            return 20;
+            return data.size();
         }
     }
 
@@ -72,4 +101,12 @@ public class DrawerLayoutActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onBackPressed() {
+        if (mDrawerLayout.isDrawerOpen()) {
+            mDrawerLayout.closeDrawer();
+        } else {
+            super.onBackPressed();
+        }
+    }
 }

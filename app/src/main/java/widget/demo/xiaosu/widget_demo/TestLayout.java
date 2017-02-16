@@ -1,5 +1,8 @@
 package widget.demo.xiaosu.widget_demo;
 
+import android.content.Context;
+import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.LinearLayout;
 
 /**
@@ -9,4 +12,22 @@ import android.widget.LinearLayout;
  */
 
 public class TestLayout extends LinearLayout {
+
+    public TestLayout(Context context) {
+        super(context);
+    }
+
+    public TestLayout(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public TestLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
+
+    @Override
+    public void offsetTopAndBottom(int offset) {
+        super.offsetTopAndBottom(offset);
+        Log.i("offsetTopAndBottom", "执行--------: " + getTop());
+    }
 }

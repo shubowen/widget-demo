@@ -3,14 +3,17 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 android {
-    compileSdkVersion COMPILE_SDK_VERSION as int
-    buildToolsVersion BUILD_TOOLS_VERSION as String
+    compileSdkVersion 25
+    buildToolsVersion "25.0.0"
 
     defaultConfig {
-        minSdkVersion MIN_SDK_VERSION as int
-        targetSdkVersion TARGET_SDK_VERSION as int
+        minSdkVersion 14
+        targetSdkVersion 25
         versionCode 1
-        versionName "1.1.7-SNAPSHOT"
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
     }
     buildTypes {
         release {
@@ -23,12 +26,6 @@ android {
 dependencies {
     provided "com.android.support:support-v4:$supportLibVersion"
     provided "com.android.support:appcompat-v7:$supportLibVersion"
-    provided "com.android.support:recyclerview-v7:$supportLibVersion"
-    provided 'io.reactivex:rxandroid:1.2.1'
-}
-
-ext {
-    packageId = 0x40
 }
 
 signing {
@@ -48,13 +45,13 @@ uploadArchives {
         }
 
         pom.project {
-            name 'widget'
+            name 'recyclerview-v7-25.0.1'
             packaging 'aar'
             description '自定义组建库'
             url 'http://117.78.40.97:9003/nexus/content/repositories/releases/'//仓库地址
             groupId "com.xiaosu.lib"
-            artifactId "widget"
-            version '1.1.8-SNAPSHOT'
+            artifactId "recyclerview-v7-25.0.1"
+            version '1.0.0-SNAPSHOT'
         }
     }
 }
